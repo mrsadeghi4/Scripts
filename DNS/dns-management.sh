@@ -55,4 +55,34 @@ function validate_input {
 }
 
 
-
+function add_domain {
+  DMN=`echo $1 | awk -F. '{print $NF}'`
+  ZONE=$(cat << EOF
+zone "$DMN" IN {
+  type master;
+  file "$DMN.zone";
+  allow-update { none; };
+  allow-query  { any; };
+};
+EOF
+)
+  escaped_zone=$(echo $ZONE | sed ':a;N;$!ba;s/\n/\\n/g')
+  grep -w ".$DMN" /etc/named.conf
+  if [[ $? -ne 0  ]]; then
+    sed -i  "/rfc1912/i $escaped_zone" /etc/named.conf
+  fi
+  if [[ -f /var/named/$DMN.zone ]]; then
+    echo -e "\n${RED}[Error] Zone file <$DMN> exist.${WHITE}\n"
+    exit 1
+  else
+    cp -ap /var/named/named.empty /var/named/$DMN.zone
+    HN=`hostname`
+    SN=$(echo "`timedatectl|grep "Local time"|awk '{print $4}'|sed -e 's/-//g'`01")
+    sed -i -e '0,/3H/ s//1D/' -e '0,/\@/ s//'$DMN'./' -e 's/\@/'$HN'/1' -e 's/rname.invalid/root.'$DMN'/' \
+        -e '0,/0/ s//'$SN'/' -e 's/127.0.0.1/'$2'/' -e '/AAA/d' /var/named/$DMN.zone
+    echo "\$ORIGIN $DMN." >> /var/named/$DMN.zone
+    echo -e "\n${GREEN}[INFO] Zone file <$DMN> successfully created. ${WHITE}\n"
+    
+    exit 0
+  fi
+}
