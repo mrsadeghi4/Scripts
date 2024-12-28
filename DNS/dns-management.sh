@@ -55,6 +55,27 @@ function validate_input {
 }
 
 
+function serial_number {
+  DMN=`echo $1 | awk -F. '{print $NF}'`
+  RC=`echo $1 | rev | cut -d'.' -f2- | rev`
+  # fetch existence serial number
+  OLD_SN=`grep "serial" /var/named/$DMN.zone | cut -d';' -f 1| awk '{print $NF}'`
+  ESN=`grep "serial" /var/named/$DMN.zone | cut -d';' -f 1| awk '{print $NF}' | cut -c 1-8`
+  NM=`grep "; serial" /var/named/$DMN.zone | cut -d';' -f 1| awk '{print $NF}' | cut -c 9-10`
+  SN=$(echo "`timedatectl|grep "Local time"|awk '{print $4}'|sed -e 's/-//g'`")
+  NEW_SN=$(echo "`timedatectl|grep "Local time"|awk '{print $4}'|sed -e 's/-//g'`01")
+  if [[ $ESN != $SN ]]; then
+    sed -ie '/'$ESN'/ s//'$NEW_SN'/' /var/named/$DMN.zone
+    echo "Serial Number $NEW_SN added."
+  else
+    NM=$(($NM+1))
+    SN=$(echo "`timedatectl|grep "Local time"|awk '{print $4}'|sed -e 's/-//g'`$NM")
+    sed -i 's/'$OLD_SN'/'$SN'/' /var/named/$DMN.zone
+    echo "Serial Number $SN added."
+  fi
+}
+
+
 function add_domain {
   DMN=`echo $1 | awk -F. '{print $NF}'`
   ZONE=$(cat << EOF
