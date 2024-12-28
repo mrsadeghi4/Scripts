@@ -1,6 +1,6 @@
 # DNS Management Script - Bash Implementation
 
-###‌ Overview
+## Overview
 
 This project is a Bash script designed for automating DNS server management tasks, including adding, removing, and searching for DNS records and domains. It is optimized for environments where quick and reliable DNS configuration is essential.
 
