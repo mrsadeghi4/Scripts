@@ -33,6 +33,12 @@ Examples:\n
 }
 
 
+if [[ $# -eq 0 ]]; then
+  help
+  exit 0
+fi
+
+
 function validate_input {
   local IP=$1
   local STAT=1
