@@ -86,3 +86,17 @@ EOF
     exit 0
   fi
 }
+
+
+function search_domain {
+    #CURRENT_PATTERN=""
+    #IFS='.' read -r -a parts <<< "$1"
+    DMN=`echo $1 | awk -F. '{print $NF}'`
+    if [[ -f /var/named/$DMN.zone ]]; then
+      #echo -e "\n${GREEN}[INFO] Zone <$DMN> exist.${WHITE}\n"
+      return 0
+    else
+      #echo -e "\n${RED}[Error] Zone <$DMN> not exist.${WHITE}\n"
+      return 1
+    fi
+}
