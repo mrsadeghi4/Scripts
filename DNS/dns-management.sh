@@ -31,3 +31,22 @@ Examples:\n
         $0 -d example.com\n
     "
 }
+
+
+function validate_input {
+  local IP=$1
+  local STAT=1
+  if [[ $IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ && $2 == "A" ]]; then
+    OIFS=$IFS
+    IFS='.'
+    IP=($IP)
+    IFS=$OIFS
+    [[ ${IP[0]} -le 255 && ${IP[1]} -le 255
+    && ${IP[2]} -le 255 && ${IP[3]} -le 255 ]]
+      STAT=$?
+    fi
+    return $STAT
+}
+
+
+
