@@ -86,7 +86,6 @@ function search_record {
     if [[ $ERC != $RC ]]; then
       return 1
     elif [[ $ERC != $RC ]] && [[ $EIP != $2 ]]; then
-      #echo -e "\n${YELLOW}[INFO] Record not exist!${WHITE}\n"
       return 1
     elif [[ $ERC == $RC ]] && [[ $EIP != $2 ]]; then
       return 1
@@ -109,14 +108,10 @@ function add_record {
   exit 1
   fi
   IFS='.' read -r -a fqdn_parts <<< $1
-  #for i in "${!fqdn_parts[@]}" ; do
-  #done
   DMN=`echo $1 | awk -F. '{print $NF}'`
   RC=`echo $1 | rev | cut -d'.' -f2- | rev`
   search_record $1 $2
-  #grep -w "$RC      A $5" /var/named/$DMN.zone > /dev/null
   if [[ $? -eq 0 ]]; then
-    #echo -e "\n${YELLOW}[WARN] DNS record <$1> exist.${WHITE}\n"
     return 1
   else
     # fetch existence serial number
@@ -167,14 +162,10 @@ EOF
 
 
 function search_domain {
-    #CURRENT_PATTERN=""
-    #IFS='.' read -r -a parts <<< "$1"
     DMN=`echo $1 | awk -F. '{print $NF}'`
     if [[ -f /var/named/$DMN.zone ]]; then
-      #echo -e "\n${GREEN}[INFO] Zone <$DMN> exist.${WHITE}\n"
       return 0
     else
-      #echo -e "\n${RED}[Error] Zone <$DMN> not exist.${WHITE}\n"
       return 1
     fi
 }
