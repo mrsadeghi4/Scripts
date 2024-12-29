@@ -76,6 +76,31 @@ function serial_number {
 }
 
 
+function search_record {
+  DMN=`echo $1 | awk -F. '{print $NF}'`
+  RC=`echo $1 | rev | cut -d'.' -f2- | rev`
+  # should remove last part of RC and check record in example.zone
+  ERC=`grep -i -m 1 "^$RC[[:space:]]" /var/named/$DMN.zone | awk '{print $1}'`
+  EIP=`grep -i -m 1 "^$RC[[:space:]]" /var/named/$DMN.zone | awk '{print $NF}'`
+  if [[ -f /var/named/$DMN.zone ]]; then
+    if [[ $ERC != $RC ]]; then
+      return 1
+    elif [[ $ERC != $RC ]] && [[ $EIP != $2 ]]; then
+      #echo -e "\n${YELLOW}[INFO] Record not exist!${WHITE}\n"
+      return 1
+    elif [[ $ERC == $RC ]] && [[ $EIP != $2 ]]; then
+      return 1
+    elif [[ $ERC == $RC ]] && [[ $EIP == $2 ]]; then
+      echo -e "\n${GREEN}[INFO] Record $1 with $2 exist! ${WHITE}\n"
+      return 0
+    fi
+  else
+    echo -e "\n${RED}[Error] Zone File not exist! ${WHITE}\n"
+    return 1
+  fi
+}
+
+
 function add_record {
   # check if it would be A record or other records are validate
   validate_input $2 $3
@@ -168,5 +193,71 @@ function remove_record {
     echo -e "\n${YELLOW}[INFO] Record not exist!${WHITE}\n"
     exit 1
   fi
-
 }
+
+
+while [[ $# -ne 0 ]]; do
+  case $1 in
+    -h)
+      help
+      exit 0
+      ;;
+    -t)
+      if [[ $# -lt 5 ]]; then
+        echo -e "\n${RED}[Error] Please enter command as help!${WHITE}\n"
+        help
+        exit 1
+      else
+        TYPE=$2
+        shift 2
+      fi
+      ;;
+    -a)
+      RECORD=$2
+      IP=$3
+      add_record $RECORD $IP $TYPE
+      if [[ $? -ne 0 ]]; then
+        help
+        exit 1
+      fi
+      shift 2
+      ;;
+    -r)
+      remove_record $2 $3
+      shift 2
+      ;;
+    -d)
+      add_domain $2
+      if [[ $? -ne 0 ]]; then
+        help
+        exit 1
+      fi
+      ;;
+    -s)
+      search_record $2 $3
+      if [[ $? -eq 0 ]]; then
+        echo -e "\n${GREEN}[INFO] Founded records are:\n<$2>\n${WHITE}\n"
+        exit 0
+      else
+        echo -e "\n${YELLOW}[INFO] Record <$2> not exist!${WHITE}\n"
+        help
+        exit 1
+      fi
+      ;;
+    -S)
+      search_domain $2
+      DMN=`echo $1 | awk -F. '{print $NF}'`
+      if [[ $? -eq 0 ]]; then
+        echo -e "\n${GREEN}[INFO] Zone <$DMN> exist.${WHITE}\n"
+        exit 0
+      else
+        echo -e "\n${RED}[Error] Zone <$DMN> not exist.${WHITE}\n"
+        help
+        exit 1
+      fi
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
