@@ -76,6 +76,38 @@ function serial_number {
 }
 
 
+function add_record {
+  # check if it would be A record or other records are validate
+  validate_input $2 $3
+  if [[ $? -ne 0 ]]; then
+    echo -e "\n${RED}[Error] IP address <$2> is not valid.${WHITE}\n"
+  exit 1
+  fi
+  IFS='.' read -r -a fqdn_parts <<< $1
+  #for i in "${!fqdn_parts[@]}" ; do
+  #done
+  DMN=`echo $1 | awk -F. '{print $NF}'`
+  RC=`echo $1 | rev | cut -d'.' -f2- | rev`
+  search_record $1 $2
+  #grep -w "$RC      A $5" /var/named/$DMN.zone > /dev/null
+  if [[ $? -eq 0 ]]; then
+    #echo -e "\n${YELLOW}[WARN] DNS record <$1> exist.${WHITE}\n"
+    return 1
+  else
+    # fetch existence serial number
+    serial_number $1
+    sed -i '/$ORIGIN '$DMN'\./a '$RC'			'$3'	'$2'' /var/named/$DMN.zone
+    if [[ -f /var/named/$DMN.zone ]]; then
+      echo -e "\n${GREEN}[INFO] DNS record <$1> added successfully.${WHITE}\n"
+      exit 0
+    else
+      echo -e "\n${RED}[Error] Zone NOT exist.${WHITE}\n"
+      exit 1
+    fi
+  fi
+}
+
+
 function add_domain {
   DMN=`echo $1 | awk -F. '{print $NF}'`
   ZONE=$(cat << EOF
