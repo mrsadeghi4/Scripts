@@ -153,3 +153,20 @@ function search_domain {
       return 1
     fi
 }
+
+
+function remove_record {
+  DMN=`echo $1 | awk -F. '{print $NF}'`
+  RC=`echo $1 | rev | cut -d'.' -f2- | rev`
+  search_record $1 $2
+  if [[ $? -eq 0 ]]; then
+    sed -i "/^$RC[[:space:]]/d" /var/named/$DMN.zone
+    serial_number $1
+    echo -e "\n${GREEN}[INFO] Record <$1> successfully deleted.\n${WHITE}\n"
+    exit 0
+  else
+    echo -e "\n${YELLOW}[INFO] Record not exist!${WHITE}\n"
+    exit 1
+  fi
+
+}
